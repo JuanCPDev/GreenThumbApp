@@ -7,16 +7,12 @@ import 'package:splashscreen/splashscreen.dart';
 import 'firebase_options.dart';
 
 
-
-
-
-
  main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
   options: DefaultFirebaseOptions.currentPlatform,
 );
- runApp(MaterialApp(
+ runApp(const MaterialApp(
     home: IntroScreen(),
   ));
 }
@@ -28,19 +24,18 @@ class IntroScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     User? result = FirebaseAuth.instance.currentUser;
     return SplashScreen(
-        //navigateAfterFuture: updateValue(result.uid),
         useLoader: true,
-        loadingTextPadding: EdgeInsets.all(0),
-        loadingText: Text(""),
+        loadingTextPadding: const EdgeInsets.all(0),
+        loadingText: const Text("Loading"),
         navigateAfterSeconds: result != null ? Home(uid: result.uid) : SignUp(),
-        seconds: 3,
-        title: Text(
-          'Welcome To Smart Inventory!',
+        seconds: 2,
+        title: const Text(
+          'Modern Green Thumb',
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20.0),
         ),
-       // image: Image.asset('assets/images/main.png', fit: BoxFit.scaleDown),
+       image: Image.asset('assets/images/home_screen_background.jpg', fit: BoxFit.scaleDown),
         backgroundColor: Colors.white,
-        styleTextUnderTheLoader: new TextStyle(),
+        styleTextUnderTheLoader: const TextStyle(),
         photoSize: 100.0,
         loaderColor: Colors.red);
   }

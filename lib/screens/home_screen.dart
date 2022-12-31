@@ -27,36 +27,39 @@ class _HomeState extends State<Home> {
       debugShowCheckedModeBanner: false,
       home: Scaffold(
         body: Container(
-          constraints: BoxConstraints.expand(),
-          decoration: const BoxDecoration(
-              //image: DecorationImage(
-              //    image: AssetImage('assets/images/main.png'), fit: BoxFit.cover),
-              ),
+          constraints: const BoxConstraints.expand(),
+          decoration:  const BoxDecoration(
+            image: DecorationImage(
+                image: AssetImage('assets/images/home_screen_background.jpg'),
+                fit: BoxFit.cover),
+          ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               SizedBox(
                 width: 110,
                 child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey[600]),
-                  child: Text("Planters"),
+                  style:
+                      ElevatedButton.styleFrom(backgroundColor: Colors.white),
+                  child:
+                      const Text("Planters", style: TextStyle(color: Colors.black)),
                   onPressed: () async {
                     Navigator.push(
                         context,
                         MaterialPageRoute(
                             builder: (context) =>
-                                InventoryScreen(uid: widget.uid)));
+                                TrackerScreen(uid: widget.uid)));
                   },
                 ),
               ),
               SizedBox(
                 width: 110,
                 child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey[600]),
-                  child: Text(
+                  style:
+                      ElevatedButton.styleFrom(backgroundColor: Colors.white),
+                  child: const Text(
                     "Log Out",
+                    style: TextStyle(color: Colors.black),
                   ),
                   onPressed: () async {
                     FirebaseAuth auth = FirebaseAuth.instance;

@@ -1,6 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:moisturecontentflutter/planter_model.dart';
-import 'package:progress_indicators/progress_indicators.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -8,24 +6,22 @@ import 'package:http/http.dart' as http;
 Future<void> displayDeleteDialog(
     BuildContext context, String name, String id) async {
   //this brings up an alert dialog to input material
-
   return await showDialog(
     context: context,
     builder: (context) {
       return AlertDialog(
-        title: Text('Are you sure you would like to remove $name material?'),
+        title: const Text(
+            'To add a new tracker follow these steps then press "OK".\n1.Turn on your tracker\n2.After a few seconds locate and connect to the SSID "Greenthumbtracker",the password is "password".\n3. After succesful connection, press "OK".'),
         actions: <Widget>[
           TextButton(
-            child: Text('OK'),
+            child: const Text('OK'),
             onPressed: () async {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                content: Text(name + " removed."),
-              ));
-              Navigator.pop(context);
+              addnewtracker(
+                  "wrongssid", "wrongpassword", "wrongserver", "wrongname");
             },
           ),
           TextButton(
-            child: Text('Cancel'),
+            child: const Text('Cancel'),
             onPressed: () {
               Navigator.pop(context);
             },
@@ -48,42 +44,26 @@ Future<Planter?> initRequest(String uid) async {
   }
 }
 
-//.then((value) {
-//Planter planters = Planter.fromJson(jsonDecode(value.body));
-//return planters;
-//});
-
-class InventoryScreen extends StatefulWidget {
-  InventoryScreen({
+class TrackerScreen extends StatefulWidget {
+  TrackerScreen({
     Key? key,
     required this.uid,
   }) : super(key: key);
   final String uid;
 
   @override
-  State<InventoryScreen> createState() => _InventoryScreenState();
+  State<TrackerScreen> createState() => _TrackerScreenState();
 }
 
-class _InventoryScreenState extends State<InventoryScreen> {
-  late Stream<Map> productNameStream;
-  //late DatabaseReference productnameStreamRef;
-  //allows the state to be updated when a value is changed
+class _TrackerScreenState extends State<TrackerScreen> {
+  @override
   void setState(VoidCallback fn) {
     super.setState(fn);
   }
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-    //final getUserDetailUrl = Uri.parse('http://10.0.2.2:5000/getUserDetails');
-
-    //http.get(getUserDetailUrl, headers: {"userid":uid});
-
-    //productNameStream = FirebaseDatabase.instance
-    //    .ref('Users/${widget.uid}/Plantmouisturetackers')
-    //  .onValue
-    //   .map((event) => event.snapshot.value as Map<dynamic,dynamic>? ?? {} );
   }
 
   @override
@@ -92,52 +72,85 @@ class _InventoryScreenState extends State<InventoryScreen> {
       future: initRequest(widget.uid),
       builder: (context, future) {
         if (future.connectionState == ConnectionState.waiting) {
-          return Text("waiting");
-        } else if (future.hasData) {
+          return Container(
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                  image: AssetImage('assets/gifs/plant_loading2.gif'),
+                  fit: BoxFit.cover),
+            ),
+          );
+        } else if ((future.connectionState == ConnectionState.done ||
+                future.connectionState == ConnectionState.active) &&
+            !future.hasError) {
           return Scaffold(
-              body: ListView(
-            children: [
-              for (int index = 0; index < future.data!.planters.length; index++)
-                Stack(
-                  children: [
-                    Card(
-                        child: Column(
+            body: Container(
+              constraints: const BoxConstraints.expand(),
+              decoration: const BoxDecoration(
+                image: DecorationImage(
+                    image: AssetImage('assets/images/signup_screen_bg.jpg'),
+                    fit: BoxFit.cover),
+              ),
+              child: ListView(
+                children: [
+                  for (int index = 0;
+                      index < future.data!.planters.length;
+                      index++)
+                    Stack(
                       children: [
-                        ListTile(
-                          title: Text(future.data!.planters[index].name),
-                        )
+                        Card(
+                            child: Column(
+                          children: [
+                            ListTile(
+                              title: Text(future.data!.planters[index].name),
+                            )
+                          ],
+                        ))
                       ],
-                    ))
-                  ],
-                )
-            ],
-          ));
+                    )
+                ],
+              ),
+            ),
+            floatingActionButton: FloatingActionButton(
+              onPressed: () {},
+              tooltip: "Add New Tracker",
+              child: Ink(
+                decoration: const ShapeDecoration(
+                    color: Color.fromARGB(255, 162, 220, 96),
+                    shape: CircleBorder()),
+                child: IconButton(
+                  iconSize: 100,
+                  onPressed: () async {
+                    await displayDeleteDialog(context, "fff", "hh")
+                        .then((value) => null);
+                    //setState(() {});
+                  },
+                  icon: Image.asset('assets/icons/add_sensor.png'),
+                ),
+              ),
+            ),
+          );
         } else {
-          return Text("mega error");
+          return const Text("mega error");
         }
       },
     );
-
-    /*
-                  floatingActionButton: FloatingActionButton(
-                    onPressed: () {},
-                    child: Ink(
-                      decoration: ShapeDecoration(
-                          color: Colors.grey[400], shape: CircleBorder()),
-                      child: IconButton(
-                        iconSize: 100,
-                        onPressed: () {
-                          setState(() {});
-                          /*
-                          Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => ItemForm()));
-                                  */
-                        },
-                        icon: Image.asset('assets/icons/addBasketIco.png'),
-                      ),
-                    ),
-                  )*/
   }
+}
+
+Future<dynamic> addnewtracker(String newSSID, String newPassword,
+    String newServerUrl, String newName) async {
+  final addNewTrackerUrl = Uri.parse('http://192.168.4.1/');
+  var response = await http
+      .post(addNewTrackerUrl,
+          body: json.encode({
+            "ssid": "newSSID",
+            "password": "newPassword",
+            "serverurl": "newServerUrl",
+            "name": "newName"
+          }))
+      .catchError((error) {
+    print(error);
+  });
+
+  return response;
 }

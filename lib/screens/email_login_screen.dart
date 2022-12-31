@@ -18,13 +18,13 @@ class _EmailLogInState extends State<EmailLogIn> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(title: Text("Login")),
+        appBar: AppBar(title: const Text("Login")),
         body: Form(
             key: _formKey,
             child: SingleChildScrollView(
                 child: Column(children: <Widget>[
               Padding(
-                padding: EdgeInsets.all(20.0),
+                padding: const EdgeInsets.all(20.0),
                 child: TextFormField(
                   controller: emailController,
                   decoration: InputDecoration(
@@ -45,7 +45,7 @@ class _EmailLogInState extends State<EmailLogIn> {
                 ),
               ),
               Padding(
-                padding: EdgeInsets.all(20.0),
+                padding: const EdgeInsets.all(20.0),
                 child: TextFormField(
                   obscureText: true,
                   controller: passwordController,
@@ -67,9 +67,9 @@ class _EmailLogInState extends State<EmailLogIn> {
                 ),
               ),
               Padding(
-                padding: EdgeInsets.all(20.0),
+                padding: const EdgeInsets.all(20.0),
                 child: isLoading
-                    ? CircularProgressIndicator()
+                    ? const CircularProgressIndicator()
                     : ElevatedButton(
                         style: ButtonStyle(
                             backgroundColor: MaterialStateProperty.all<Color>(
@@ -82,7 +82,7 @@ class _EmailLogInState extends State<EmailLogIn> {
                             logInToFb();
                           }
                         },
-                        child: Text('Submit'),
+                        child: const Text('Submit'),
                       ),
               )
             ]))));
@@ -103,11 +103,11 @@ class _EmailLogInState extends State<EmailLogIn> {
           context: context,
           builder: (BuildContext context) {
             return AlertDialog(
-              title: Text("Error"),
+              title: const Text("Error"),
               content: Text(err.message),
               actions: [
                 ElevatedButton(
-                  child: Text("Ok"),
+                  child: const Text("Ok"),
                   onPressed: () {
                     setState(() {
                       isLoading = false;
