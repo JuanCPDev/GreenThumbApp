@@ -120,4 +120,11 @@ class _EmailLogInState extends State<EmailLogIn> {
           });
     });
   }
+
+  @override
+  void dispose() {
+    super.dispose();
+    emailController.dispose();
+    passwordController.dispose();
+  }
 }

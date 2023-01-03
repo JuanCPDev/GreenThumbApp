@@ -1,23 +1,24 @@
+import 'dart:async';
 import 'package:moisturecontentflutter/planter_model.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:moisturecontentflutter/secret.dart';
 
-Future<void> displayDeleteDialog(
-    BuildContext context, String name, String id) async {
+Future<void> displayNewTrackerInstructions(BuildContext context, String id) {
   //this brings up an alert dialog to input material
-  return await showDialog(
+  return showDialog(
     context: context,
     builder: (context) {
       return AlertDialog(
         title: const Text(
-            'To add a new tracker follow these steps then press "OK".\n1.Turn on your tracker\n2.After a few seconds locate and connect to the SSID "Greenthumbtracker",the password is "password".\n3. After succesful connection, press "OK".'),
+            'To add a new tracker follow these steps then press "OK".\n1.Turn on your tracker\n2.After a few seconds locate and connect to the SSID "Greenthumbtracker",the password is "password".\n3. After succesful connection, press "Next".'),
         actions: <Widget>[
           TextButton(
-            child: const Text('OK'),
-            onPressed: () async {
-              addnewtracker(
-                  "wrongssid", "wrongpassword", "wrongserver", "wrongname");
+            child: const Text('Next'),
+            onPressed: () {
+              Navigator.pop(context);
+              showCredentialsInput(context, id);
             },
           ),
           TextButton(
@@ -32,9 +33,128 @@ Future<void> displayDeleteDialog(
   );
 }
 
+Future<void> showCredentialsInput(BuildContext context, String id) async {
+  bool httperror = false;
+  TextEditingController ssidController = TextEditingController();
+  TextEditingController nameController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
+  //this brings up an alert dialog to input credentials
+  return await showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: const Text('Please enter the following information'),
+        actions: <Widget>[
+          TextField(
+            controller: ssidController,
+            decoration: const InputDecoration(
+                helperText: "*WiFi SSID",
+                helperStyle: TextStyle(color: Colors.black, fontSize: 16),
+                hintText: "YourWiFiName"),
+          ),
+          TextField(
+            controller: passwordController,
+            decoration: const InputDecoration(
+                helperText: "*WiFi Password",
+                helperStyle: TextStyle(color: Colors.black, fontSize: 16),
+                hintText: "YourWiFiPassword"),
+          ),
+          TextField(
+            controller: nameController,
+            decoration: const InputDecoration(
+                helperText: "Tracker Display Name",
+                helperStyle: TextStyle(color: Colors.black, fontSize: 16),
+                hintText: "Kitchen Cactus"),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(
+                  child: const Text('Add'),
+                  onPressed: () async {
+                    showLoadingDialog(context);
+                    await addnewtracker(ssidController.text,
+                            passwordController.text, id, nameController.text)
+                        .timeout(const Duration(seconds: 15), onTimeout: (() {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          duration: Duration(seconds: 8),
+                          content: Text(
+                              "Error, make sure you are connected to tracker Wifi(GreenThumbTracker) and try again")));
+                      Navigator.pop(context);
+                      Navigator.pop(context);
+                    })).whenComplete(() async {
+                      http.Response response =
+                          await getConnectionStatus().catchError((error) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                            duration: Duration(seconds: 8),
+                            content: Text(
+                                "Error, make sure you are connected to tracker Wifi(GreenThumbTracker) and try again")));
+                        Navigator.pop(context);
+                        Navigator.pop(context);
+                      });
+                      while (!response.body.contains("Connected") &&
+                          !response.body.contains("incorrect credentials") &&
+                          !httperror) {
+                        response =
+                            await getConnectionStatus().catchError((error) {
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                              duration: Duration(seconds: 8),
+                              content: Text(
+                                  "Error, make sure you are connected to tracker Wifi(GreenThumbTracker) and try again")));
+                          Navigator.pop(context);
+                          Navigator.pop(context);
+                        });
+                      }
+                      if (response.body.contains("Connected")) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            duration: const Duration(seconds: 8),
+                            content: Text(
+                                "Succesfully added ${nameController.text}")));
+                        Navigator.pop(context);
+                        Navigator.pop(context);
+                      } else if (response.body
+                          .contains("incorrect credentials")) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                duration: Duration(seconds: 8),
+                                content: Text(
+                                    "Incorrect credentials!! Try again.")));
+                        Navigator.pop(context);
+                        Navigator.pop(context);
+                      }
+                    }).catchError((error) {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          duration: Duration(seconds: 8),
+                          content: Text(
+                              "Error, make sure you are connected to tracker Wifi(GreenThumbTracker) and try again")));
+                      Navigator.pop(context);
+                      Navigator.pop(context);
+                    });
+                  }),
+              TextButton(
+                child: const Text('Cancel'),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+              ),
+            ],
+          ),
+        ],
+      );
+    },
+  );
+}
+
+Future<void> showLoadingDialog(BuildContext context) {
+  return showDialog(
+      context: context,
+      builder: (context) {
+        return const CircularProgressIndicator();
+      });
+}
+
 Future<Planter?> initRequest(String uid) async {
-  final getUserDetailUrl =
-      Uri.parse('http://10.0.2.2:5000/getplanters?userId=$uid');
+  final getUserDetailUrl = Uri.parse('$serverHost/getplanters?userId=$uid');
   var response = await http.get(getUserDetailUrl);
   if (response.body.isNotEmpty) {
     Planter planter = Planter.fromJson(jsonDecode(response.body));
@@ -119,10 +239,8 @@ class _TrackerScreenState extends State<TrackerScreen> {
                     shape: CircleBorder()),
                 child: IconButton(
                   iconSize: 100,
-                  onPressed: () async {
-                    await displayDeleteDialog(context, "fff", "hh")
-                        .then((value) => null);
-                    //setState(() {});
+                  onPressed: () {
+                    displayNewTrackerInstructions(context, widget.uid);
                   },
                   icon: Image.asset('assets/icons/add_sensor.png'),
                 ),
@@ -137,20 +255,17 @@ class _TrackerScreenState extends State<TrackerScreen> {
   }
 }
 
-Future<dynamic> addnewtracker(String newSSID, String newPassword,
-    String newServerUrl, String newName) async {
-  final addNewTrackerUrl = Uri.parse('http://192.168.4.1/');
-  var response = await http
-      .post(addNewTrackerUrl,
-          body: json.encode({
-            "ssid": "newSSID",
-            "password": "newPassword",
-            "serverurl": "newServerUrl",
-            "name": "newName"
-          }))
-      .catchError((error) {
-    print(error);
-  });
+Future<http.Response?> addnewtracker(
+    String newSSID, String newPassword, String userId, String newName) async {
+  final addNewTrackerUrl = Uri.parse(
+      '$trackerAddNewUrl/credentials?ssid=$newSSID&password=$newPassword&userId=$userId&name=$newName');
+  var response = http.post(addNewTrackerUrl);
+  return response;
+}
 
+Future<http.Response> getConnectionStatus() async {
+  final getConnectionStatusUrl =
+      Uri.parse('$trackerConnectionStatusUrl/getstatus');
+  var response = await http.get(getConnectionStatusUrl);
   return response;
 }
