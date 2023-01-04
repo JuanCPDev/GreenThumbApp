@@ -1,16 +1,3 @@
-# moisturecontentflutter
+# Modern Green Thumb Application
 
-A new Flutter project.
-
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
-
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+This is the mobile application for iOS and Android phones. It allows you to setup each individual [tracker](https://github.com/JuanCPDev/ModernGreenThumbTracker) and add it to your account. It uses Google's Firebase Authentication services for account management. It then communicates with the [API](https://github.com/JuanCPDev/ModernGreenThumbServer) using HTTP commands to get all tracker information.
