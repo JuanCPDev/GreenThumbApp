@@ -1,4 +1,8 @@
 import 'dart:async';
+import 'dart:io';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:moisturecontentflutter/planter_model.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
@@ -109,7 +113,7 @@ Future<void> showCredentialsInput(BuildContext context, String id) async {
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                             duration: const Duration(seconds: 8),
                             content: Text(
-                                "Succesfully added ${nameController.text}")));
+                                "Succesfully added ${nameController.text}, refresh page.")));
                         Navigator.pop(context);
                         Navigator.pop(context);
                       } else if (response.body
@@ -155,7 +159,16 @@ Future<void> showLoadingDialog(BuildContext context) {
 
 Future<Planter?> initRequest(String uid) async {
   final getUserDetailUrl = Uri.parse('$serverHost/getplanters?userId=$uid');
-  var response = await http.get(getUserDetailUrl);
+  var response;
+  try {
+    response = await http
+        .get(getUserDetailUrl)
+        .timeout(const Duration(seconds: 15), onTimeout: () {
+      http.Response emptyFuture = http.Response("", 404);
+      return emptyFuture;
+    });
+  } catch (error) {}
+
   if (response.body.isNotEmpty) {
     Planter planter = Planter.fromJson(jsonDecode(response.body));
     return planter;
@@ -201,33 +214,62 @@ class _TrackerScreenState extends State<TrackerScreen> {
           );
         } else if ((future.connectionState == ConnectionState.done ||
                 future.connectionState == ConnectionState.active) &&
-            !future.hasError) {
+            !future.hasError &&
+            future.hasData) {
           return Scaffold(
             body: Container(
+              padding: const EdgeInsets.all(2),
               constraints: const BoxConstraints.expand(),
               decoration: const BoxDecoration(
                 image: DecorationImage(
                     image: AssetImage('assets/images/signup_screen_bg.jpg'),
                     fit: BoxFit.cover),
               ),
-              child: ListView(
-                children: [
-                  for (int index = 0;
-                      index < future.data!.planters.length;
-                      index++)
-                    Stack(
+              child: GridView.builder(
+                itemCount: future.data!.planters.length,
+                itemBuilder: (context, index) {
+                  return Container(
+                    padding: const EdgeInsets.all(4),
+                    color: Colors.grey,
+                    child: Column(
                       children: [
-                        Card(
-                            child: Column(
-                          children: [
-                            ListTile(
-                              title: Text(future.data!.planters[index].name),
-                            )
-                          ],
-                        ))
+                        Text(
+                          future.data!.planters[index].name,
+                          style: TextStyle(color: Colors.black, fontSize: 20),
+                        ),
+                        const SizedBox(height: 2),
+                        GestureDetector(
+                          onLongPress: () => addTrackerImage(
+                              widget.uid, future.data!.planters[index].name),
+                          child: CircleAvatar(
+                            maxRadius: 55,
+                            child: CircleAvatar(
+                              backgroundImage: CachedNetworkImageProvider(
+                                  future.data!.planters[index].thumbnailUrl),
+                              radius: 50,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        SizedBox(
+                          child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                    "Moisture level: ${future.data!.planters[index].value}"),
+                                Text(
+                                    "Last Checked: ${future.data!.planters[index].lastTimeChecked}")
+                              ]),
+                        ),
                       ],
-                    )
-                ],
+                    ),
+                  );
+                },
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 4.0,
+                    mainAxisSpacing: 4.0,
+                    childAspectRatio: .97),
               ),
             ),
             floatingActionButton: FloatingActionButton(
@@ -241,6 +283,8 @@ class _TrackerScreenState extends State<TrackerScreen> {
                   iconSize: 100,
                   onPressed: () {
                     displayNewTrackerInstructions(context, widget.uid);
+                    setState() {}
+                    ;
                   },
                   icon: Image.asset('assets/icons/add_sensor.png'),
                 ),
@@ -248,11 +292,52 @@ class _TrackerScreenState extends State<TrackerScreen> {
             ),
           );
         } else {
-          return const Text("mega error");
+          return Scaffold(
+              body: Container(
+            constraints: const BoxConstraints.expand(),
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                  image: AssetImage('assets/images/signup_screen_bg.jpg'),
+                  fit: BoxFit.cover),
+            ),
+          ));
         }
       },
     );
   }
+}
+
+addTrackerImage(String uid, String name) async {
+  String filename;
+
+  XFile? pickedImage = await ImagePicker()
+      .pickImage(source: ImageSource.gallery, maxHeight: 100, maxWidth: 100);
+
+  if (pickedImage != null) {
+    File file = File(pickedImage.path);
+    filename = pickedImage.name;
+    final firebaseStorage =
+        FirebaseStorage.instance.ref("users/$uid/").child("images/$filename");
+
+    await firebaseStorage.putFile(file);
+    String url = await firebaseStorage.getDownloadURL();
+    uploadTrackerImage(url, uid, name);
+  }
+}
+
+uploadTrackerImage(String url, String uid, String name) async {
+  final updateTrackerImageUrl =
+      Uri.parse('$serverHost/updatetrackerimage?userId=$uid');
+  var response;
+  var data = {"thumbnailUrl": url, "name": name};
+  response = await http.post(updateTrackerImageUrl,
+      body: jsonEncode(data),
+      headers: {
+        "Content-Type": "application/json"
+      }).then((value) => const SnackBar(
+      duration: Duration(seconds: 8),
+      content: Text("Photo added, refresh page.")));
+  ;
 }
 
 Future<http.Response?> addnewtracker(
