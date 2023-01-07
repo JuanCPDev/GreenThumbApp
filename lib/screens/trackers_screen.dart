@@ -221,8 +221,6 @@ class _TrackerScreenState extends State<TrackerScreen> {
                 Future.delayed(Duration(seconds: 1), (() => setState(() {}))),
             child: Scaffold(
               body: Container(
-                //padding: const EdgeInsets.all(2),
-                // constraints: const BoxConstraints.expand(),
                 decoration: const BoxDecoration(
                   image: DecorationImage(
                       image: AssetImage('assets/images/signup_screen_bg.jpg'),
@@ -232,6 +230,8 @@ class _TrackerScreenState extends State<TrackerScreen> {
                   itemCount: future.data!.planters.length,
                   itemBuilder: (context, index) {
                     return Card(
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15)),
                       color: Colors.white,
                       child: Column(
                         children: [
@@ -242,24 +242,22 @@ class _TrackerScreenState extends State<TrackerScreen> {
                                   TextStyle(color: Colors.black, fontSize: 20),
                             ),
                           ),
-                          
-                            GestureDetector(behavior: HitTestBehavior.translucent,
-                                onLongPress: () => addTrackerImage(widget.uid,
-                                    future.data!.planters[index].name),
-                                child: AspectRatio(
-                                  aspectRatio: 16/9,
-                                  child: Ink.image(
-                                    //width: 300,
-                                    //height: 200,
-                                      fit: BoxFit.fill,
-                                      image: CachedNetworkImageProvider(future
-                                          .data!.planters[index].thumbnailUrl)),
-                                )),
-                          
+                          GestureDetector(
+                              behavior: HitTestBehavior.translucent,
+                              onLongPress: () => addTrackerImage(widget.uid,
+                                  future.data!.planters[index].name),
+                              child: AspectRatio(
+                                aspectRatio: 16 / 9,
+                                child: Ink.image(
+                                    fit: BoxFit.fill,
+                                    image: CachedNetworkImageProvider(future
+                                        .data!.planters[index].thumbnailUrl)),
+                              )),
                           ListTile(
                             title: Text(
                                 "Moisture level: ${loademojis(future.data!.planters[index].value)}"),
-                          subtitle: Text("Last Checked: ${future.data!.planters[index].lastTimeChecked}"),
+                            subtitle: Text(
+                                "Last Checked: ${future.data!.planters[index].lastTimeChecked}"),
                           ),
                         ],
                       ),
@@ -300,39 +298,48 @@ class _TrackerScreenState extends State<TrackerScreen> {
       },
     );
   }
-}
 
-addTrackerImage(String uid, String name) async {
-  String filename;
+  addTrackerImage(String uid, String name) async {
+    String filename;
 
-  XFile? pickedImage = await ImagePicker()
-      .pickImage(source: ImageSource.gallery, maxHeight: 1000, maxWidth: 1000);
+    XFile? pickedImage = await ImagePicker().pickImage(
+        source: ImageSource.gallery, maxHeight: 1000, maxWidth: 1000);
 
-  if (pickedImage != null) {
-    File file = File(pickedImage.path);
-    filename = pickedImage.name;
-    final firebaseStorage =
-        FirebaseStorage.instance.ref("users/$uid/").child("images/$filename");
+    if (pickedImage != null) {
+      File file = File(pickedImage.path);
+      filename = pickedImage.name;
+      final firebaseStorage =
+          FirebaseStorage.instance.ref("users/$uid/").child("images/$filename");
 
-    await firebaseStorage.putFile(file);
-    String url = await firebaseStorage.getDownloadURL();
-    uploadTrackerImage(url, uid, name);
+      await firebaseStorage.putFile(file);
+      String url = await firebaseStorage.getDownloadURL();
+      uploadTrackerImage(url, uid, name);
+    }
   }
-}
 
-uploadTrackerImage(String url, String uid, String name) async {
-  final updateTrackerImageUrl =
-      Uri.parse('$serverHost/updatetrackerimage?userId=$uid');
-  var response;
-  var data = {"thumbnailUrl": url, "name": name};
-  response = await http.post(updateTrackerImageUrl,
-      body: jsonEncode(data),
-      headers: {
-        "Content-Type": "application/json"
-      }).then((value) => const SnackBar(
-      duration: Duration(seconds: 8),
-      content: Text("Photo added, refresh page.")));
-
+  uploadTrackerImage(String url, String uid, String name) async {
+    final updateTrackerImageUrl =
+        Uri.parse('$serverHost/updatetrackerimage?userId=$uid');
+    var response;
+    var data = {"thumbnailUrl": url, "name": name};
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        duration: Duration(seconds: 1),
+        content: Text("Setting photo..."),
+      ),
+    );
+    response = await http.post(updateTrackerImageUrl,
+        body: jsonEncode(data),
+        headers: {"Content-Type": "application/json"}).then(
+      (value) => ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          duration: Duration(seconds: 4),
+          content: Text("Photo set"),
+        ),
+      ),
+    );
+    setState(() {});
+  }
 }
 
 Future<http.Response?> addnewtracker(
