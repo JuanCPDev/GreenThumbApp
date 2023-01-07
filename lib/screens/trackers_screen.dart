@@ -216,77 +216,72 @@ class _TrackerScreenState extends State<TrackerScreen> {
                 future.connectionState == ConnectionState.active) &&
             !future.hasError &&
             future.hasData) {
-          return Scaffold(
-            body: Container(
-              padding: const EdgeInsets.all(2),
-              constraints: const BoxConstraints.expand(),
-              decoration: const BoxDecoration(
-                image: DecorationImage(
-                    image: AssetImage('assets/images/signup_screen_bg.jpg'),
-                    fit: BoxFit.cover),
-              ),
-              child: GridView.builder(
-                itemCount: future.data!.planters.length,
-                itemBuilder: (context, index) {
-                  return Container(
-                    padding: const EdgeInsets.all(4),
-                    color: Colors.grey,
-                    child: Column(
-                      children: [
-                        Text(
-                          future.data!.planters[index].name,
-                          style: TextStyle(color: Colors.black, fontSize: 20),
-                        ),
-                        const SizedBox(height: 2),
-                        GestureDetector(
-                          onLongPress: () => addTrackerImage(
-                              widget.uid, future.data!.planters[index].name),
-                          child: CircleAvatar(
-                            maxRadius: 55,
-                            child: CircleAvatar(
-                              backgroundImage: CachedNetworkImageProvider(
-                                  future.data!.planters[index].thumbnailUrl),
-                              radius: 50,
+          return RefreshIndicator(
+            onRefresh: () =>
+                Future.delayed(Duration(seconds: 1), (() => setState(() {}))),
+            child: Scaffold(
+              body: Container(
+                //padding: const EdgeInsets.all(2),
+                // constraints: const BoxConstraints.expand(),
+                decoration: const BoxDecoration(
+                  image: DecorationImage(
+                      image: AssetImage('assets/images/signup_screen_bg.jpg'),
+                      fit: BoxFit.cover),
+                ),
+                child: ListView.builder(
+                  itemCount: future.data!.planters.length,
+                  itemBuilder: (context, index) {
+                    return Card(
+                      color: Colors.white,
+                      child: Column(
+                        children: [
+                          ListTile(
+                            title: Text(
+                              future.data!.planters[index].name,
+                              style:
+                                  TextStyle(color: Colors.black, fontSize: 20),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 2),
-                        SizedBox(
-                          child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                    "Moisture level: ${future.data!.planters[index].value}"),
-                                Text(
-                                    "Last Checked: ${future.data!.planters[index].lastTimeChecked}")
-                              ]),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 4.0,
-                    mainAxisSpacing: 4.0,
-                    childAspectRatio: .97),
-              ),
-            ),
-            floatingActionButton: FloatingActionButton(
-              onPressed: () {},
-              tooltip: "Add New Tracker",
-              child: Ink(
-                decoration: const ShapeDecoration(
-                    color: Color.fromARGB(255, 162, 220, 96),
-                    shape: CircleBorder()),
-                child: IconButton(
-                  iconSize: 100,
-                  onPressed: () {
-                    displayNewTrackerInstructions(context, widget.uid);
-                    setState() {}
-                    ;
+                          
+                            GestureDetector(behavior: HitTestBehavior.translucent,
+                                onLongPress: () => addTrackerImage(widget.uid,
+                                    future.data!.planters[index].name),
+                                child: AspectRatio(
+                                  aspectRatio: 16/9,
+                                  child: Ink.image(
+                                    //width: 300,
+                                    //height: 200,
+                                      fit: BoxFit.fill,
+                                      image: CachedNetworkImageProvider(future
+                                          .data!.planters[index].thumbnailUrl)),
+                                )),
+                          
+                          ListTile(
+                            title: Text(
+                                "Moisture level: ${loademojis(future.data!.planters[index].value)}"),
+                          subtitle: Text("Last Checked: ${future.data!.planters[index].lastTimeChecked}"),
+                          ),
+                        ],
+                      ),
+                    );
                   },
-                  icon: Image.asset('assets/icons/add_sensor.png'),
+                ),
+              ),
+              floatingActionButton: FloatingActionButton(
+                onPressed: () {},
+                tooltip: "Add New Tracker",
+                child: Ink(
+                  decoration: const ShapeDecoration(
+                      color: Color.fromARGB(255, 162, 220, 96),
+                      shape: CircleBorder()),
+                  child: IconButton(
+                    iconSize: 100,
+                    onPressed: () {
+                      displayNewTrackerInstructions(context, widget.uid);
+                      setState() {}
+                    },
+                    icon: Image.asset('assets/icons/add_sensor.png'),
+                  ),
                 ),
               ),
             ),
@@ -311,7 +306,7 @@ addTrackerImage(String uid, String name) async {
   String filename;
 
   XFile? pickedImage = await ImagePicker()
-      .pickImage(source: ImageSource.gallery, maxHeight: 100, maxWidth: 100);
+      .pickImage(source: ImageSource.gallery, maxHeight: 1000, maxWidth: 1000);
 
   if (pickedImage != null) {
     File file = File(pickedImage.path);
@@ -337,7 +332,7 @@ uploadTrackerImage(String url, String uid, String name) async {
       }).then((value) => const SnackBar(
       duration: Duration(seconds: 8),
       content: Text("Photo added, refresh page.")));
-  ;
+
 }
 
 Future<http.Response?> addnewtracker(
@@ -353,4 +348,18 @@ Future<http.Response> getConnectionStatus() async {
       Uri.parse('$trackerConnectionStatusUrl/getstatus');
   var response = await http.get(getConnectionStatusUrl);
   return response;
+}
+
+String loademojis(int moistureLevel) {
+  if (moistureLevel > 800) {
+    return "💧";
+  } else if (moistureLevel > 600) {
+    return "💧💧";
+  } else if (moistureLevel > 500) {
+    return "💧💧💧";
+  } else if (moistureLevel > 400) {
+    return "💧💧💧";
+  } else {
+    return moistureLevel.toString();
+  }
 }
