@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+import 'package:moisturecontentflutter/secret.dart';
 
 import 'home_screen.dart';
 
@@ -129,10 +130,10 @@ class _EmailSignUpState extends State<EmailSignUp> {
             email: emailController.text, password: passwordController.text)
         .then(
       (result) {
-        final createUserUrl = Uri.parse('http://10.0.2.2:5000/createUser');
+        final createUserUrl = Uri.parse('$serverHost/createuser');
         http.post(createUserUrl,
             body: json.encode(
-                {"userId": result.user!.uid, "name": nameController.text}),
+                {"userId": result.user!.uid, "name": nameController.text, "email":emailController.text}),
             headers: {"Content-Type": "application/json"}).then(
           (value) {
             isLoading = false;
