@@ -51,5 +51,7 @@
   			<string>Upload image from camera for item background</string>
   		<key>NSMicrophoneUsageDescription</key>
   			<string>videos for background</string>
+		<key>FirebaseMessagingAutoInitEnabled</key>
+			<false/>
 	</dict>
 </plist>
