@@ -19,43 +19,46 @@ class SignUp extends StatelessWidget {
                 fit: BoxFit.cover),
           ),
           child: Center(
-            
-            child: Column(mainAxisAlignment: MainAxisAlignment.center, children: <
-                Widget>[
-              const Padding(
-                padding: EdgeInsets.all(10.0),
-                child: Text("Modern Green Thumb",
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 30,
-                        fontFamily: 'Roboto')),
-              ),
-              Padding(
-                  padding: const EdgeInsets.all(10.0),
-                  child: SignInButton(
-                    Buttons.Email,
-                    text: "Sign up with Email",
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => EmailSignUp()),
-                      );
-                    },
-                  )),
-              Padding(
-                  padding: const EdgeInsets.all(10.0),
-                  child: GestureDetector(
-                      child: const Text("Log In Using Email",
-                          style: TextStyle(
-                              decoration: TextDecoration.underline,
-                              color: Colors.blue)),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => EmailLogIn()),
-                        );
-                      }))
-            ]),
+            child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  const Padding(
+                    padding: EdgeInsets.all(10.0),
+                    child: Text("Modern Green Thumb",
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 30,
+                            fontFamily: 'Roboto')),
+                  ),
+                  Padding(
+                      padding: const EdgeInsets.all(10.0),
+                      child: SignInButton(
+                        Buttons.Email,
+                        text: "Sign up with Email",
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => EmailSignUp()),
+                          );
+                        },
+                      )),
+                  Padding(
+                      padding: const EdgeInsets.all(10.0),
+                      child: ElevatedButton(
+                          child: const Text("Log In Using Email",
+                              style: TextStyle(
+                                  decoration: TextDecoration.underline,
+                                  color: Colors.black,
+                                  fontSize: 15)),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => EmailLogIn()),
+                            );
+                          }))
+                ]),
           ),
         ));
   }
