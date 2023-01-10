@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
-import 'package:moisturecontentflutter/secret.dart';
+import 'package:ModernGreenThumbApp/secret.dart';
 
 import 'home_screen.dart';
 

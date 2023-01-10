@@ -1,8 +1,8 @@
+import 'package:ModernGreenThumbApp/screens/home_screen.dart';
+import 'package:ModernGreenThumbApp/screens/signup_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:moisturecontentflutter/screens/home_screen.dart';
-import 'package:moisturecontentflutter/screens/signup_screen.dart';
 import 'package:splashscreen/splashscreen.dart';
 import 'firebase_options.dart';
 
